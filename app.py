@@ -1,6 +1,5 @@
-#Decision Support System: Systemic Barrier Analysis
- #Instalar dependencias necesarias
-!pip install dash plotly dash-bootstrap-components pandas scikit-learn --quiet
+# Decision Support System: Systemic Barrier Analysis
+# Install required dependencies
 
 # Importar librerías
 import pandas as pd
@@ -24,24 +23,24 @@ df = pd.DataFrame(data)
 
 # ========== FUNCIONES ANALÍTICAS ==========
 def calculate_composite_score(df, weights=None):
-    """Calcula el puntaje compuesto con normalización min-max"""
+    """Calculate composite score using min-max normalization"""
     if weights is None:
         weights = {'SHAP': 0.5, 'Out_Degree': 0.3, 'Betweenness': 0.2}
 
-    # Normalización
+    # NNormalization
     scaler = MinMaxScaler()
     df_norm = df.copy()
     for col in ['SHAP', 'Out_Degree', 'Betweenness']:
         df_norm[col] = scaler.fit_transform(df[[col]])
 
-    # Puntaje compuesto
+    # Composite score
     df['Composite_Score'] = (weights['SHAP'] * df_norm['SHAP'] +
                            weights['Out_Degree'] * df_norm['Out_Degree'] +
                            weights['Betweenness'] * df_norm['Betweenness'])
     return df
 
 def perform_clustering(df):
-    """Realiza PCA y clustering K-means"""
+    """Perform PCA and K-means clustering"""
     # Estandarización
     X = df[['SHAP', 'Out_Degree', 'Betweenness']]
     X_scaled = StandardScaler().fit_transform(X)
@@ -61,13 +60,13 @@ def perform_clustering(df):
     return df
 
 def simulate_removal(df, barrier_to_remove):
-    """Simula la eliminación de una barrera"""
+    """Simulate barrier removal"""
     df_sim = df.copy()
     if barrier_to_remove:
         df_sim.loc[df_sim['Barrier'] == barrier_to_remove, ['SHAP', 'Out_Degree', 'Betweenness']] = 0
     return df_sim
 
-# Procesamiento inicial
+# Initial processing
 df = calculate_composite_score(df)
 df = perform_clustering(df)
 
@@ -131,11 +130,11 @@ app.layout = dbc.Container([
                 multi=True
             ),
 
-            dbc.Label("Ordenar por:", className="font-weight-bold mt-3"),
+            dbc.Label("Sort by:", className="font-weight-bold mt-3"),
             dcc.Dropdown(
                 id='sort-by',
                 options=[
-                    {'label': 'Puntaje Compuesto', 'value': 'Composite_Score'},
+                    {'label': 'Composite Score', 'value': 'Composite_Score'},
                     {'label': 'SHAP', 'value': 'SHAP'},
                     {'label': 'Out-Degree', 'value': 'Out_Degree'},
                     {'label': 'Betweenness', 'value': 'Betweenness'}
@@ -189,7 +188,7 @@ app.layout = dbc.Container([
                     width=12
                 )
             ])
-        ], label="Ranking de Barreras"),
+        ], label="Barrier Ranking"),
 
         dbc.Tab([
             dbc.Row([
@@ -198,11 +197,11 @@ app.layout = dbc.Container([
                     width=8
                 ),
                 dbc.Col([
-                    html.H5("Descripción de Clusters", className="mb-3"),
+                    html.H5("Cluster Description", className="mb-3"),
                     html.Div(id='cluster-description', className="p-3 bg-light rounded")
                 ], width=4)
             ])
-        ], label="Explorador de Tipologías"),
+        ], label="Typology Explorer"),
 
         dbc.Tab([
             dbc.Row([
@@ -245,16 +244,16 @@ app.layout = dbc.Container([
                     width=12
                 )
             ])
-        ], label="Simulador de Impacto")
+        ], label="Impact Simulator")
     ]),
 
     # Notas al pie
     dbc.Row([
         dbc.Col(
             html.P("""
-                Nota: El puntaje compuesto combina influencia sistémica (SHAP), centralidad (Out-Degree)
-                y capacidad de intermediación (Betweenness) usando los pesos especificados. Los clusters
-                se identificaron mediante K-means (k=3) aplicado a las métricas estandarizadas.
+                 Note: The composite score combines systemic influence (SHAP), centrality (Out-Degree),
+                and mediation role (Betweenness) using the specified weights. Clusters were identified
+                using K-means (k=3) on standardized metrics.
             """, className="small text-muted mt-4"),
             width=12
         )
@@ -303,7 +302,7 @@ def update_dashboard(shap_w, out_w, bet_w, barrier_removed, clusters, sort_by):
         df_sim, x='PCA1', y='PCA2', color='Cluster',
         hover_data=['Barrier', 'SHAP', 'Out_Degree', 'Betweenness', 'Composite_Score'],
         color_discrete_sequence=px.colors.qualitative.Pastel,
-        title="Espacio de Tipologías de Barreras"
+        title="Barrier Typology Space"
     )
     pca_fig.update_layout(
         plot_bgcolor='rgba(240,240,240,0.8)',
@@ -330,7 +329,7 @@ def update_dashboard(shap_w, out_w, bet_w, barrier_removed, clusters, sort_by):
         impact_fig = px.bar(
             df_impact, x='Barrier', y='Change',
             color='Change', color_continuous_scale='RdBu',
-            title=f"Cambio en Puntaje al Eliminar {barrier_removed}"
+            title=f"Variation in Composite Score Due to Removal of  {barrier_removed}"
         )
         impact_fig.update_layout(yaxis_tickformat=".0%")
 
